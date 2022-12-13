@@ -6,7 +6,7 @@ import { loginReducer, initialState } from '../reducers/loginReducer';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/AppContext';
 const Login = () => {
-  const baseUrl = 'https://khademdrugstoreapi.onrender.com/api/users';
+  const baseUrl = 'https://khademdrugstoreapi.onrender.com/api';
   const navigate = useNavigate();
   const [user, setUser] = useState({ email: '', password: '' });
   const [state, dispatch] = useReducer(loginReducer, initialState);
@@ -38,7 +38,7 @@ const Login = () => {
     }
 
     try {
-      const { data } = await axios.post(`${baseUrl}/login`, user);
+      const { data } = await axios.post(`${baseUrl}/users/login`, user);
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: 'You are successfully LogedIn',

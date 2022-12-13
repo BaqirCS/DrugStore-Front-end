@@ -1,0 +1,21 @@
+   .listItem {
+  text-decoration: none;
+  list-style-type: none;
+}
+.foo {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: red;
+  color: white;
+  text-align: center;
+}
+.landingPage {
+  min-height: 80vh;
+  background-image: url('./image/The-Pet-Experience-Dog-and-Cats-1200px.jpg ');
+  background-repeat: no-repeat;
+  background-size: auto;
+  background-attachment: fixed;
+  background-position: center;
+}

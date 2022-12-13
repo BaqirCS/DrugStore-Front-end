@@ -6,7 +6,7 @@ import { loginReducer, initialState } from '../reducers/loginReducer';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/AppContext';
 const Login = () => {
-  const baseUrl = '/users';
+  const baseUrl = 'https://khademdrugstoreapi.onrender.com/api/users';
   const navigate = useNavigate();
   const [user, setUser] = useState({ email: '', password: '' });
   const [state, dispatch] = useReducer(loginReducer, initialState);

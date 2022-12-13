@@ -4,6 +4,7 @@ import { drugReducer, initialState } from '../reducers/drugReducer';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../component/Loader';
 function Drugs() {
+  const baseUrl = 'https://khademdrugstoreapi.onrender.com/api';
   const [state, dispatch] = useReducer(drugReducer, initialState);
   const navigate = useNavigate();
 
@@ -14,7 +15,7 @@ function Drugs() {
   const fetchAllDrugs = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get('/drugs');
+      const { data } = await axios.get(`${baseUrl}/drugs`);
       data.map((item) => {
         item.expirationDate = item.expirationDate.toString().slice(0, 10);
         item.productionDate = item.productionDate.toString().slice(0, 10);

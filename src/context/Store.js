@@ -5,7 +5,7 @@ const initialState = {
   userInfo: localStorage.getItem('userInfo')
     ? JSON.parse(localStorage.getItem('userInfo'))
     : null,
-  baseUrl: 'https://drugstorekhademapi.onrender.com//api',
+  baseUrl: 'https://drugstorekhademapi.onrender.com/api',
 };
 function reducer(state, action) {
   switch (action.type) {

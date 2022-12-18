@@ -1,11 +1,13 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { updateDrugReducer, initialState } from '../reducers/updateDrugReducer';
 import MessageBox from '../component/MessageBox';
 import { useParams } from 'react-router-dom';
 import Loader from '../component/Loader';
+import { Store } from '../context/Store';
 function UpdateDrug() {
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(updateDrugReducer, initialState);
   const { id } = useParams();
   const [drug, setDrug] = useState({
@@ -21,10 +23,15 @@ function UpdateDrug() {
 
   useEffect(() => {
     fetchDrug();
+    // eslint-disable-next-line
   }, []);
   const fetchDrug = async () => {
     try {
-      const { data } = await axios.get(`/drugs/${id}`);
+      const { data } = await axios.get(`${ctxState.baseUrl}/drugs/${id}`, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
       data.expirationDate = data.expirationDate.toString().slice(0, 10);
       data.productionDate = data.productionDate.toString().slice(0, 10);
       setDrug(data);
@@ -76,7 +83,7 @@ function UpdateDrug() {
         payload: 'selling price of drug is required',
       });
     }
-    if (!drug.countInStock) {
+    if (!drug.countInStock || drug.countInStock <= 0) {
       return dispatch({
         type: 'UPDATE_D_FAIL',
         payload: 'Number of drug in stock is required',
@@ -84,7 +91,12 @@ function UpdateDrug() {
     }
     try {
       dispatch({ type: 'UPDATE_D_REQUEST' });
-      await axios.patch(`/drugs/${id}`, drug);
+      await axios.patch(`${ctxState.baseUrl}/drugs/${id}`, drug, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
+
       dispatch({ type: 'UPDATE_D_SUCCESS' });
     } catch (error) {
       dispatch({ type: 'UPDATE_D_FAIL', payload: error.response.data });

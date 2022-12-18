@@ -1,14 +1,16 @@
 import axios from 'axios';
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Loader from '../component/Loader';
 import MessageBox from '../component/MessageBox';
+import { Store } from '../context/Store';
 import { initialState, withdrawReducer } from '../reducers/withdrawReducer';
 
 function Withdraw() {
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(withdrawReducer, initialState);
-  // console.log(state.allWithdraws);
   const current = new Date();
+  const [all, setAll] = useState(state.allWithdraw ? state.allWithdraw : []);
   const formatedDate = `${current.getDate()}/${
     current.getMonth() + 1
   }/${current.getFullYear()}`;
@@ -18,6 +20,27 @@ function Withdraw() {
     reason: '',
     amount: '',
   });
+
+  useEffect(() => {
+    getAllWithdraw();
+    // eslint-disable-next-line
+  }, []);
+  const getAllWithdraw = async () => {
+    try {
+      const { data } = await axios.get(`${ctxState.baseUrl}/withdraw`, {
+        headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+      });
+      data.map((item) => {
+        item.date = item.date = item.date.toString().slice(0, 10);
+        return item;
+      });
+      setAll(data);
+      dispatch({ type: 'GET_WITHDRAW_SUCCESS', payload: data });
+    } catch (error) {
+      dispatch({ type: 'GET_WITHDRAW_FAIL', payload: error.response.data });
+    }
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
     if (!withdara.date) {
@@ -44,19 +67,34 @@ function Withdraw() {
         payload: 'Amount of Withdraw is required',
       });
     }
-
-    e.preventDefault();
+    if (withdara.amount <= 0) {
+      return dispatch({
+        type: 'WITHDRAW_FAIL',
+        payload: 'Amount of Withdraw should be greater than 0',
+      });
+    }
     if (withdara._id) {
       try {
         dispatch({ type: 'UPDATE_WITHDRAW_REQUEST' });
         const { data } = await axios.patch(
-          `/withdraw/${withdara._id}`,
-          withdara
+          `${ctxState.baseUrl}/withdraw/${withdara._id}`,
+          withdara,
+          {
+            headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+          }
         );
         dispatch({
           type: 'UPDATE_WITHDRAW_SUCCESS',
           payload: data,
         });
+        data.date = data.date.toString().slice(0, 10);
+        const copyItem = all.map((item) => {
+          if (item._id === data._id) {
+            item = data;
+          }
+          return item;
+        });
+        setAll(copyItem);
         clearAllFields();
       } catch (error) {
         dispatch({
@@ -67,12 +105,20 @@ function Withdraw() {
     } else {
       try {
         dispatch({ type: 'WITHDRAW_REQUEST' });
-        const { data } = await axios.post('/withdraw', withdara);
+        const { data } = await axios.post(
+          `${ctxState.baseUrl}/withdraw`,
+          withdara,
+          {
+            headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+          }
+        );
 
         dispatch({
           type: 'WITHDRAW_SUCCESS',
           payload: data,
         });
+        data.date = data.date.toString().slice(0, 10);
+        setAll([...all, data]);
         clearAllFields();
       } catch (error) {
         dispatch({ type: 'WITHDRAW_FAIL', payload: error.response.data });
@@ -85,22 +131,6 @@ function Withdraw() {
   };
   const clearAllFields = () => {
     setWithdraw({ date: formatedDate, by: '', reason: '', amount: '' });
-  };
-
-  useEffect(() => {
-    getAllWithdraw();
-  }, []);
-  const getAllWithdraw = async () => {
-    try {
-      const { data } = await axios.get('/withdraw');
-      data.map((item) => {
-        item.date = item.date = item.date.toString().slice(0, 10);
-        return item;
-      });
-      dispatch({ type: 'GET_WITHDRAW_SUCCESS', payload: data });
-    } catch (error) {
-      dispatch({ type: 'GET_WITHDRAW_FAIL', payload: error.response.data });
-    }
   };
 
   const updateTriger = (id) => {
@@ -218,49 +248,55 @@ function Withdraw() {
         </div>
       </form>
 
-      {state.loading && <Loader />}
-
-      {state.allWithdraws && (
+      {state.loading ? (
+        <Loader />
+      ) : (
         <>
-          <h2 className="mt-5 mb-3 text-center">All Withdraw History</h2>
+          {' '}
+          {state.allWithdraws && all.length > 0 && (
+            <>
+              <h2 className="mt-5 mb-3 text-center">All Withdraw History</h2>
 
-          <table
-            className="table align-middle  table-hover"
-            style={{ backgroundColor: '#eee', marginBottom: '80px' }}
-          >
-            <thead className="bg-dark text-white ">
-              <tr className="text-center">
-                <th>#</th>
-                <th>Date</th>
-                <th>AMOUNT</th>
-                <th>By</th>
-                <th>Reason</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.allWithdraws.map((item, index) => (
-                <tr className="text-center" key={item._id}>
-                  <td>{index}</td>
-                  <td>{item.date}</td>
-                  <td>{item.amount}</td>
-                  <td>{item.by}</td>
-                  <td>{item.reason}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => updateTriger(item._id)}
-                    >
-                      <i
-                        className="bi bi-pencil-fill"
-                        style={{ color: 'green' }}
-                      ></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <table
+                className="table align-middle  table-hover"
+                style={{ backgroundColor: '#eee', marginBottom: '80px' }}
+              >
+                <thead className="bg-dark text-white ">
+                  <tr className="text-center">
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>AMOUNT</th>
+                    <th>By</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {state.allWithdraws &&
+                    all.map((item, index) => (
+                      <tr className="text-center" key={item._id}>
+                        <td>{index}</td>
+                        <td>{item.date}</td>
+                        <td>{item.amount}</td>
+                        <td>{item.by}</td>
+                        <td>{item.reason}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => updateTriger(item._id)}
+                          >
+                            <i
+                              className="bi bi-pencil-fill"
+                              style={{ color: 'green' }}
+                            ></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </>
       )}
     </div>

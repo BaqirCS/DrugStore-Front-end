@@ -1,13 +1,16 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import MessageBox from '../component/MessageBox';
 import picture from '../image/download.png';
 import axios from 'axios';
+import Loader from '../component/Loader';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerReducer, initialState } from '../reducers/registerReducer';
+import { Store } from '../context/Store';
 
-const baseUrl = 'http://localhost:5000/api';
 const Register = () => {
-  const [info, dispatch] = useReducer(registerReducer, initialState);
+  const { state: ctxState } = useContext(Store);
+
+  const [state, dispatch] = useReducer(registerReducer, initialState);
   const navigate = useNavigate();
   const [user, setUser] = useState({
     name: '',
@@ -16,12 +19,12 @@ const Register = () => {
     repeatPassword: '',
   });
   useEffect(() => {
-    if (info.success) {
+    if (state.success) {
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     }
-  }, [info, navigate]);
+  }, [state, navigate]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -69,7 +72,8 @@ const Register = () => {
     }
 
     try {
-      await axios.post(`${baseUrl}/users`, user);
+      dispatch({ type: 'REGISTER_REQUEST' });
+      await axios.post(`${ctxState.baseUrl}/users`, user);
       dispatch({
         type: 'REGISTER_SUCCESS',
         payload: 'Your Account is successfully Created',
@@ -99,20 +103,20 @@ const Register = () => {
                 </h3>
                 <div className="card-body p-md-5">
                   <div className="row justify-content-center">
-                    {info.error && (
+                    {state.error && (
                       <div className="row">
                         <MessageBox
                           showMessage={showMessage}
-                          message={info.message}
+                          message={state.message}
                           color="danger"
                         />
                       </div>
                     )}
-                    {info.success && (
+                    {state.success && (
                       <div className="row">
                         <MessageBox
                           showMessage={showMessage}
-                          message={info.message}
+                          message={state.message}
                           color="success"
                         />
                       </div>
@@ -125,135 +129,139 @@ const Register = () => {
                         SIGN UP
                       </p>
 
-                      <form className="mx-1 mx-md-4">
-                        <div className="d-flex flex-row align-items-center mb-2">
-                          <i
-                            className="bi bi-person-fill h3"
-                            style={{
-                              marginTop: '-30px',
-                              marginRight: '10px',
-                            }}
-                          ></i>
-                          <div className="form-outline flex-fill mb-0">
-                            <input
-                              type="text"
-                              id="name"
-                              className="form-control"
-                              placeholder="Your Name"
-                              value={user.name}
-                              onChange={(e) =>
-                                setUser({ ...user, name: e.target.value })
-                              }
-                            />
-                            <label
-                              className="form-label"
-                              htmlFor="name"
-                            ></label>
+                      {state.loading ? (
+                        <Loader />
+                      ) : (
+                        <form className="mx-1 mx-md-4">
+                          <div className="d-flex flex-row align-items-center mb-2">
+                            <i
+                              className="bi bi-person-fill h3"
+                              style={{
+                                marginTop: '-30px',
+                                marginRight: '10px',
+                              }}
+                            ></i>
+                            <div className="form-outline flex-fill mb-0">
+                              <input
+                                type="text"
+                                id="name"
+                                className="form-control"
+                                placeholder="Your Name"
+                                value={user.name}
+                                onChange={(e) =>
+                                  setUser({ ...user, name: e.target.value })
+                                }
+                              />
+                              <label
+                                className="form-label"
+                                htmlFor="name"
+                              ></label>
+                            </div>
                           </div>
-                        </div>
-                        <div className="d-flex flex-row align-items-center mb-2">
-                          <i
-                            className="bi bi-envelope-fill h3"
-                            style={{
-                              marginTop: '-30px',
-                              marginRight: '10px',
-                            }}
-                          ></i>
-                          <div className="form-outline flex-fill mb-0">
-                            <input
-                              type="email"
-                              id="email"
-                              className="form-control"
-                              placeholder="Your Email"
-                              value={user.email}
-                              onChange={(e) =>
-                                setUser({ ...user, email: e.target.value })
-                              }
-                            />
-                            <label
-                              className="form-label"
-                              htmlFor="email"
-                            ></label>
+                          <div className="d-flex flex-row align-items-center mb-2">
+                            <i
+                              className="bi bi-envelope-fill h3"
+                              style={{
+                                marginTop: '-30px',
+                                marginRight: '10px',
+                              }}
+                            ></i>
+                            <div className="form-outline flex-fill mb-0">
+                              <input
+                                type="email"
+                                id="email"
+                                className="form-control"
+                                placeholder="Your Email"
+                                value={user.email}
+                                onChange={(e) =>
+                                  setUser({ ...user, email: e.target.value })
+                                }
+                              />
+                              <label
+                                className="form-label"
+                                htmlFor="email"
+                              ></label>
+                            </div>
                           </div>
-                        </div>
-                        <div className="d-flex flex-row align-items-center mb-2">
-                          <i
-                            className="bi bi-lock-fill h3"
-                            style={{
-                              marginTop: '-30px',
-                              marginRight: '10px',
-                            }}
-                          ></i>{' '}
-                          <div className="form-outline flex-fill mb-0">
-                            <input
-                              type="password"
-                              id="password"
-                              className="form-control"
-                              placeholder="Password"
-                              value={user.password}
-                              onChange={(e) =>
-                                setUser({ ...user, password: e.target.value })
-                              }
-                            />
-                            <label
-                              className="form-label"
-                              htmlFor="password"
-                            ></label>
+                          <div className="d-flex flex-row align-items-center mb-2">
+                            <i
+                              className="bi bi-lock-fill h3"
+                              style={{
+                                marginTop: '-30px',
+                                marginRight: '10px',
+                              }}
+                            ></i>{' '}
+                            <div className="form-outline flex-fill mb-0">
+                              <input
+                                type="password"
+                                id="password"
+                                className="form-control"
+                                placeholder="Password"
+                                value={user.password}
+                                onChange={(e) =>
+                                  setUser({ ...user, password: e.target.value })
+                                }
+                              />
+                              <label
+                                className="form-label"
+                                htmlFor="password"
+                              ></label>
+                            </div>
                           </div>
-                        </div>
-                        <div className="d-flex flex-row align-items-center mb-2">
-                          <i
-                            className="bi bi-key-fill h3"
-                            style={{
-                              marginTop: '-30px',
-                              marginRight: '10px',
-                            }}
-                          ></i>{' '}
-                          <div className="form-outline flex-fill mb-0">
-                            <input
-                              type="password"
-                              id="repeatPassword"
-                              className="form-control"
-                              placeholder="Repeat Your Password"
-                              value={user.repeatPassword}
-                              onChange={(e) =>
-                                setUser({
-                                  ...user,
-                                  repeatPassword: e.target.value,
-                                })
-                              }
-                            />
-                            <label
-                              className="form-label"
-                              htmlFor="repeatPassword"
-                            ></label>
+                          <div className="d-flex flex-row align-items-center mb-2">
+                            <i
+                              className="bi bi-key-fill h3"
+                              style={{
+                                marginTop: '-30px',
+                                marginRight: '10px',
+                              }}
+                            ></i>{' '}
+                            <div className="form-outline flex-fill mb-0">
+                              <input
+                                type="password"
+                                id="repeatPassword"
+                                className="form-control"
+                                placeholder="Repeat Your Password"
+                                value={user.repeatPassword}
+                                onChange={(e) =>
+                                  setUser({
+                                    ...user,
+                                    repeatPassword: e.target.value,
+                                  })
+                                }
+                              />
+                              <label
+                                className="form-label"
+                                htmlFor="repeatPassword"
+                              ></label>
+                            </div>
                           </div>
-                        </div>
 
-                        <div className=" justify-content-center   text-center mx-4 mb-3 mb-lg-4">
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            style={{
-                              backgroundColor: '#009000',
-                              borderColor: '#009000',
-                            }}
-                            onClick={submitHandler}
-                          >
-                            REGISTER
-                          </button>
-                          <p>
-                            {' '}
-                            already have an account?
-                            <Link
-                              to="/login"
-                              style={{ color: 'red', marginBottom: '70px' }}
+                          <div className=" justify-content-center   text-center mx-4 mb-3 mb-lg-4">
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              style={{
+                                backgroundColor: '#009000',
+                                borderColor: '#009000',
+                              }}
+                              onClick={submitHandler}
                             >
-                              Log in
-                            </Link>
-                          </p>
-                        </div>
-                      </form>
+                              REGISTER
+                            </button>
+                            <p>
+                              {' '}
+                              already have an account?
+                              <Link
+                                to="/login"
+                                style={{ color: 'red', marginBottom: '70px' }}
+                              >
+                                Log in
+                              </Link>
+                            </p>
+                          </div>
+                        </form>
+                      )}
                     </div>
                     <div className="col-md-9 col-lg-5 col-xl-6 d-flex align-items-center order-1 order-lg-2 ms-5">
                       <img

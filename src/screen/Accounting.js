@@ -1,12 +1,13 @@
 import axios from 'axios';
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import InfoMessage from '../component/InfoMessage';
 import Loader from '../component/Loader';
+import { Store } from '../context/Store';
 import { accountReducer, initialState } from '../reducers/accountReducer';
 
-const baseURL = '/accounts';
 function Accounting() {
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(accountReducer, initialState);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Accounting() {
     fetchDailyData();
     fetchMonthlyData();
     fetchTotalData();
+    // eslint-disable-next-line
   }, []);
 
   const searchHandler = () => {
@@ -23,7 +25,9 @@ function Accounting() {
   const fetchDailyData = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get(baseURL);
+      const { data } = await axios.get(`${ctxState.baseUrl}/accounts`, {
+        headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+      });
       dispatch({ type: 'GET_D_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'GET_D_FAIL', payload: error.response.data });
@@ -33,7 +37,12 @@ function Accounting() {
     try {
       dispatch({ type: 'GET_M_REQUEST' });
 
-      const { data } = await axios.get(`${baseURL}/getAccountsByMonth`);
+      const { data } = await axios.get(
+        `${ctxState.baseUrl}/accounts/getAccountsByMonth`,
+        {
+          headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+        }
+      );
       dispatch({ type: 'GET_M_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'GET_M_FAIL', payload: error.response.data });
@@ -42,7 +51,12 @@ function Accounting() {
   const fetchTotalData = async () => {
     try {
       dispatch({ type: 'GET_T_REQUEST' });
-      const { data } = await axios.get(`${baseURL}/getTotalAccounts`);
+      const { data } = await axios.get(
+        `${ctxState.baseUrl}/accounts/getTotalAccounts`,
+        {
+          headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+        }
+      );
       dispatch({ type: 'GET_T_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'GET_T_FAIL', payload: error.response.data });

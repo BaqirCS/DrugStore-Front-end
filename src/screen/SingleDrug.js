@@ -1,11 +1,13 @@
-import React, { useReducer, useState } from 'react';
+import React, { useContext, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Loader from '../component/Loader';
 import axios from 'axios';
 import { addDrugReducer, initialState } from '../reducers/addDrugReducer';
 import MessageBox from '../component/MessageBox';
+import { Store } from '../context/Store';
 function SingleDrug() {
   const [state, dispatch] = useReducer(addDrugReducer, initialState);
+  const { state: ctxState } = useContext(Store);
   const [drug, setDrug] = useState({
     name: '',
     category: '',
@@ -68,7 +70,11 @@ function SingleDrug() {
     }
     try {
       dispatch({ type: 'ADD_D_REQUEST' });
-      await axios.post('/drugs', drug);
+      await axios.post(`${ctxState.baseUrl}/drugs`, drug, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
       dispatch({ type: 'ADD_D_SUCCESS' });
       clearAllFields();
     } catch (error) {

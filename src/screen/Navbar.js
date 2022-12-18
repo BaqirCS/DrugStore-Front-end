@@ -1,23 +1,19 @@
-import axios from 'axios';
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from '../context/AppContext';
+import { Store } from '../context/Store';
 function Navbar() {
-  const data = localStorage.getItem('AuthUser')
-    ? JSON.parse(localStorage.getItem('AuthUser'))
-    : null;
+  const { state: data, dispatch } = useContext(Store);
   const navigate = useNavigate();
-  const { value, setValue } = useContext(UserContext);
-  const logoutHandler = async () => {
-    await axios.get('/users/logout');
-    setValue(null);
-    localStorage.removeItem('AuthUser');
+
+  const clickHandler = () => {
+    dispatch({ type: 'USER_SIGN_OUT' });
+    localStorage.removeItem('userInfo');
     navigate('/');
   };
 
   return (
-    value && (
-      <nav className="navbar navbar-expand-md navbar-dark bg-dark  p-3">
+    <nav className="navbar navbar-expand-md navbar-dark bg-dark  p-3">
+      {data.userInfo && (
         <div className="container">
           <Link className="navbar-brand" to="/drugs">
             Khadem DrugStore
@@ -96,7 +92,6 @@ function Navbar() {
                 </Link>
               </li>
             </ul>
-
             <ul className="navbar-nav ms-auto">
               <li className="nav-item dropdown">
                 <Link
@@ -108,29 +103,27 @@ function Navbar() {
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
-                  {data ? data.name : 'user'}
+                  {data.userInfo.user.name}
                 </Link>
                 <div className="dropdown-menu " aria-labelledby="profileOne">
                   <Link className="dropdown-item " to="/profile">
                     PROFILE
                   </Link>
-                  {data && data.status === 'admin' && (
+                  {data.userInfo.user.status === 'admin' && (
                     <Link className="dropdown-item " to="/users">
                       ALL USERS
                     </Link>
                   )}
                 </div>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" onClick={logoutHandler}>
-                  LOG OUT
-                </Link>
+              <li className="nav-item" onClick={clickHandler}>
+                <Link className="nav-link">LOG OUT</Link>
               </li>
             </ul>
           </div>
         </div>
-      </nav>
-    )
+      )}
+    </nav>
   );
 }
 

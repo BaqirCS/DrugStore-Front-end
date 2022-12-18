@@ -1,19 +1,26 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useContext, useEffect, useReducer } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loader from '../component/Loader';
 import MessageBox from '../component/InfoMessage';
 import axios from 'axios';
 import { dificiencyReducer, initialState } from '../reducers/dificiencyReducer';
+import { Store } from '../context/Store';
 function Deficiency() {
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(dificiencyReducer, initialState);
   const navigate = useNavigate();
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line
   }, []);
   const fetchData = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get('/deficiency');
+      const { data } = await axios.get(`${ctxState.baseUrl}/deficiency`, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
       dispatch({ type: 'GET_D_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'GET_D_FAIL', payload: error.response.data });
@@ -27,7 +34,15 @@ function Deficiency() {
     if (confirmDelete) {
       try {
         dispatch({ type: 'DELETE_D_REQUEST' });
-        const { data } = await axios.delete(`/deficiency/${id}`);
+        const { data } = await axios.delete(
+          `${ctxState.baseUrl}/deficiency/${id}`,
+          {
+            headers: {
+              authorization: `Bearer ${ctxState.userInfo.token}`,
+            },
+          }
+        );
+
         dispatch({ type: 'DELETE_D_SUCCESS', payload: data });
       } catch (error) {
         dispatch({ type: 'DELETE_D_FAIL', payload: error.response.data });

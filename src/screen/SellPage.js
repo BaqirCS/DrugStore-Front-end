@@ -1,21 +1,28 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { sellPageReducer, initialState } from '../reducers/sellPageReducer';
 import MessageBox from '../component/MessageBox';
+import { Store } from '../context/Store';
+import Loader from '../component/Loader';
 function SellPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [list, setList] = useState({});
   const [state, dispatch] = useReducer(sellPageReducer, initialState);
+  const { state: ctxState } = useContext(Store);
+
   useEffect(() => {
     fetchDrugs();
+    // eslint-disable-next-line
   }, []);
 
   const fetchDrugs = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get('/drugs');
+      const { data } = await axios.get(`${ctxState.baseUrl}/drugs`, {
+        headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+      });
       data.map((item) => {
         item.expirationDate = item.expirationDate.toString().slice(0, 10);
         item.productionDate = item.productionDate.toString().slice(0, 10);
@@ -27,6 +34,7 @@ function SellPage() {
     }
   };
   const searchhandler = () => {
+    // eslint-disable-next-line
     const x = state.drugs.filter((item) => {
       if (item.name.includes(search)) {
         return item;
@@ -48,7 +56,9 @@ function SellPage() {
   const clickHandler = (id) => {
     navigate(`/singleSellDrug/${id}`);
   };
-  return (
+  return state.loading ? (
+    <Loader />
+  ) : (
     <div className="container mt-4">
       <h2 className="text-center mb-5  ">Daily Selling</h2>
       <ul className=" d-flex mb-4 mt-4 ">

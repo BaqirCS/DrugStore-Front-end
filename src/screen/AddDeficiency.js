@@ -1,13 +1,16 @@
 import axios from 'axios';
-import React, { useReducer, useState } from 'react';
+import React, { useContext, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Loader from '../component/Loader';
 import MessageBox from '../component/MessageBox';
+import { Store } from '../context/Store';
 import {
   initialState,
   addDeficiencyReducer,
 } from '../reducers/addDeficiencyReducer';
 function AddDeficiency() {
+  const { state: ctxState } = useContext(Store);
+
   const [state, dispatch] = useReducer(addDeficiencyReducer, initialState);
 
   const [def, setDef] = useState({
@@ -53,7 +56,11 @@ function AddDeficiency() {
 
     try {
       dispatch({ type: 'SEND_D_REQUEST' });
-      const { data } = await axios.post('/deficiency', def);
+      const { data } = await axios.post(`${ctxState.baseUrl}/deficiency`, def, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
       dispatch({ type: 'SEND_D_SUCCESS', payload: data });
       clearAllField();
     } catch (error) {

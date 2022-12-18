@@ -1,11 +1,10 @@
 import React, { useReducer, useState, useEffect, useContext } from 'react';
 import { userReducer, initialState } from '../reducers/userReducer';
 import MessageBox from '../component/MessageBox';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UserContext } from '../context/AppContext';
+import { Store } from '../context/Store';
 function Profile() {
-  const navigate = useNavigate();
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(userReducer, initialState);
   const [user, setUser] = useState({
     name: '',
@@ -19,9 +18,14 @@ function Profile() {
 
   useEffect(() => {
     fetchCurrentUser();
+    // eslint-disable-next-line
   }, [state.success]);
   const fetchCurrentUser = async () => {
-    const { data } = await axios.get('/users/currentUser');
+    const { data } = await axios.get(`${ctxState.baseUrl}/users/currentUser`, {
+      headers: {
+        authorization: `Bearer ${ctxState.userInfo.token}`,
+      },
+    });
     setUser({
       ...user,
       name: data.name,
@@ -53,7 +57,15 @@ function Profile() {
 
     try {
       dispatch({ tyep: 'UPDATE_USER_REQUEST' });
-      const { data } = await axios.patch(`/users/${user._id}`, user);
+      const { data } = await axios.patch(
+        `${ctxState.baseUrl}/users/${user._id}`,
+        user,
+        {
+          headers: {
+            authorization: `Bearer ${ctxState.userInfo.token}`,
+          },
+        }
+      );
       dispatch({ type: 'UPDATE_USER_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'UPDATE_USER_FAIL', payload: error.response.data });

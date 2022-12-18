@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer } from 'react';
 import axios from 'axios';
 import {
   expirationListReducer,
@@ -6,16 +6,24 @@ import {
 } from '../reducers/expirationListReducer';
 import Loader from '../component/Loader';
 import MessageBox from '../component/MessageBox';
+import { Store } from '../context/Store';
 function ExpirationList() {
+  const { state: ctxState } = useContext(Store);
   const [state, dispatch] = useReducer(expirationListReducer, initialState);
   useEffect(() => {
     getData();
+    // eslint-disable-next-line
   }, []);
   const getData = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get('/drugs/exp');
+      const { data } = await axios.get(`${ctxState.baseUrl}/drugs/exp`, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
+      });
       const x = new Date();
+      // eslint-disable-next-line
       const newList = data.filter((item) => {
         let expireDate = new Date(item.expirationDate);
         const mili = expireDate.getTime() - x.getTime();

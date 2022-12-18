@@ -1,9 +1,12 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { allUserReducer, initialState } from '../reducers/allUserReducer';
 import MessageBox from '../component/MessageBox';
 import axios from 'axios';
 import Loader from '../component/Loader';
+import { Store } from '../context/Store';
 function Profile() {
+  const { state: ctxState } = useContext(Store);
+
   const [state, dispatch] = useReducer(allUserReducer, initialState);
   const [users, setUsers] = useState([]);
 
@@ -18,18 +21,24 @@ function Profile() {
 
   useEffect(() => {
     getUsers();
+    // eslint-disable-next-line
   }, []);
 
   const getUsers = async () => {
     try {
       dispatch({ type: 'GET_U_REQUEST' });
-      const { data } = await axios.get('/users');
-      const { data: userData } = await axios.get('/users/currentUser');
-      dispatch({ type: 'GET_U_SUCCESS', payload: data });
-      const newData = data.filter((item) => {
-        return item._id !== userData._id;
+      const { data } = await axios.get(`${ctxState.baseUrl}/users`, {
+        headers: {
+          authorization: `Bearer ${ctxState.userInfo.token}`,
+        },
       });
-      setUsers(newData);
+
+      const x = data.filter(
+        (item) => item._id !== ctxState.userInfo.user.userId
+      );
+      dispatch({ type: 'GET_U_SUCCESS', payload: x });
+
+      setUsers(x);
     } catch (error) {
       dispatch({ type: 'GET_U_FAIL', payload: error.response.data });
     }
@@ -39,7 +48,11 @@ function Profile() {
     const confirmDelete = window.confirm('do you want to delete this User?');
     if (confirmDelete) {
       try {
-        await axios.delete(`/users/${id}`);
+        await axios.delete(`${ctxState.baseUrl}/users/${id}`, {
+          headers: {
+            authorization: `Bearer ${ctxState.userInfo.token}`,
+          },
+        });
         const newArray = users.filter((item) => {
           return item._id !== id;
         });
@@ -97,7 +110,15 @@ function Profile() {
     finalUser.status = user.status;
     try {
       dispatch({ type: 'UPDATE_U_REQUEST' });
-      const { data } = await axios.patch(`/users/${user._id}`, finalUser);
+      const { data } = await axios.patch(
+        `${ctxState.baseUrl}/users/${user._id}`,
+        finalUser,
+        {
+          headers: {
+            authorization: `Bearer ${ctxState.userInfo.token}`,
+          },
+        }
+      );
       dispatch({ type: 'UPDATE_U_SUCCESS' });
       const newArray = users.map((item) =>
         item._id === user._id ? data : item

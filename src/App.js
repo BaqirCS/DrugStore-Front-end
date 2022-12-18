@@ -22,67 +22,52 @@ import Footer from './screen/Footer';
 import Users from './screen/Users';
 import UpdateDeficiency from './screen/UpdateDeficiency';
 import UpdateDrug from './screen/UpdateDrug';
-import { UserContext } from './context/AppContext';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext } from 'react';
+import { Store } from './context/Store';
+
 function App() {
-  const data = localStorage.getItem('AuthUser')
-    ? JSON.parse(localStorage.getItem('AuthUser'))
-    : null;
-
-  const [value, setValue] = useState(data);
-
-  const memoValue = useMemo(() => ({ value, setValue }), [value, setValue]);
-
-  useEffect(() => {
-    window.addEventListener('beforeunload', function (e) {
-      this.localStorage.clear();
-    });
-
-    return () => {};
-  }, []);
-
+  const { state } = useContext(Store);
   return (
     <BrowserRouter>
-      <UserContext.Provider value={memoValue}>
-        <Navbar />
+      {state.userInfo ? (
+        <>
+          <Navbar />
 
+          <Routes>
+            <Route element={<Drugs />} path="/drugs" />
+            <Route element={<Drugs />} path="/" />
+            <Route element={<UpdateDrug />} path="/singleDrug/:id" />
+            <Route element={<SingleDrug />} path="/singleDrug" />
+
+            <Route element={<Accounting />} path="/accounting" />
+            <Route element={<SingleAccount />} path="/singleAccount" />
+            <Route element={<SellPage />} path="/sellDrugPage" />
+            <Route element={<SingleSell />} path="/singleSellDrug/:id" />
+
+            <Route element={<Withdraw />} path="/withdraw" />
+            <Route element={<ExpirationList />} path="/expirationList" />
+
+            <Route element={<Deficiency />} path="/deficiency" />
+            <Route
+              element={<UpdateDeficiency />}
+              path="/updateDeficiency/:id"
+            />
+            <Route element={<AddDeficiency />} path="/addDeficiency" />
+
+            <Route element={<Profile />} path="/profile" />
+            <Route element={<Users />} path="/users" />
+            <Route element={<Error />} path="/*" />
+          </Routes>
+        </>
+      ) : (
         <Routes>
-          {value ? (
-            <>
-              <Route element={<Drugs />} path="/drugs" />
-              <Route element={<Accounting />} path="/accounting" />
-              <Route element={<SellPage />} path="/sellDrugPage" />
-              <Route element={<SingleSell />} path="/singleSellDrug/:id" />
-              <Route element={<Withdraw />} path="/withdraw" />
-              <Route element={<Deficiency />} path="/deficiency" />
-              <Route element={<AddDeficiency />} path="/addDeficiency" />
-              <Route
-                element={<UpdateDeficiency />}
-                path="/updateDeficiency/:id"
-              />
-
-              <Route element={<ExpirationList />} path="/expirationList" />
-              <Route element={<SingleDrug />} path="/singleDrug" />
-              <Route element={<UpdateDrug />} path="/singleDrug/:id" />
-
-              <Route element={<Profile />} path="/profile" />
-              <Route element={<Users />} path="/users" />
-              <Route element={<SingleAccount />} path="/singleAccount" />
-              <Route element={<Drugs />} path="/login" />
-              <Route element={<Drugs />} path="/register" />
-              <Route element={<Error />} path="/*" />
-            </>
-          ) : (
-            <>
-              <Route element={<Login />} path="/login" />
-              <Route element={<Register />} path="/register" />
-
-              <Route element={<LandingPage />} path="/" />
-              <Route element={<Login />} path="/*" />
-            </>
-          )}
+          <Route element={<Register />} path="/register" />
+          <Route element={<LandingPage />} path="/" />
+          <Route element={<Login />} path="/login" />
+          <Route element={<Login />} path="/*" />
         </Routes>
-      </UserContext.Provider>
+      )}
+
       <Footer />
     </BrowserRouter>
   );

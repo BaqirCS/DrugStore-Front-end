@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { initialState, singleSellReducer } from '../reducers/singeSellReducer';
 import InfoMessage from '../component/InfoMessage';
@@ -6,25 +6,31 @@ import Loader from '../component/Loader';
 import {} from 'react-router-dom';
 import MessageBox from '../component/MessageBox';
 import axios from 'axios';
+import { Store } from '../context/Store';
 function SingleSell() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(singleSellReducer, initialState);
+  const { state: ctxState } = useContext(Store);
+
   const [drug, setDrug] = useState({
     amount: 1,
     discount: '',
     total: '',
     date: '',
-    methodOfPay: '',
+    methodOfPay: 'cash',
   });
 
   useEffect(() => {
     fetchDrug();
+    // eslint-disable-next-line
   }, []);
   const fetchDrug = async () => {
     try {
       dispatch({ type: 'GET_D_REQUEST' });
-      const { data } = await axios.get(`/drugs/${id}`);
+      const { data } = await axios.get(`${ctxState.baseUrl}/drugs/${id}`, {
+        headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+      });
       dispatch({ type: 'GET_D_SUCCESS', payload: data });
     } catch (error) {
       dispatch({ type: 'GET_D_FAIL', payload: error.response.data });
@@ -69,7 +75,9 @@ function SingleSell() {
     };
     try {
       dispatch({ type: 'SEND_D_REQUEST' });
-      await axios.post('/accounts', sellDrug);
+      await axios.post(`${ctxState.baseUrl}/accounts`, sellDrug, {
+        headers: { authorization: `Bearer ${ctxState.userInfo.token}` },
+      });
       dispatch({ type: 'SEND_D_SUCCESS' });
       navigate('/sellDrugPage');
     } catch (error) {
@@ -239,6 +247,7 @@ function SingleSell() {
                   <select
                     className="form-select"
                     aria-label="Default select example"
+                    value={drug.methodOfPay}
                     onChange={(e) =>
                       setDrug({ ...drug, methodOfPay: e.target.value })
                     }
